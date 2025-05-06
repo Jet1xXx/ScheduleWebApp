@@ -1,0 +1,22 @@
+﻿@model ScheduleWebApp.Models.Teacher
+
+@{
+    ViewData["Title"] = "Удалить преподавателя";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<h3>Вы уверены, что хотите удалить преподавателя?</h3>
+
+<div>
+    <h4>@Model.FirstName @Model.LastName</h4>
+    <p>Email: @Model.Email</p>
+    <p>Город: @Model.City?.CityName</p>
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="TeacherId" />
+    <button type="submit" class="btn btn-danger">Удалить</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
+</form>
+
