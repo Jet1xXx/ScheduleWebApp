@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ScheduleWebApp.Models
@@ -13,14 +14,15 @@ namespace ScheduleWebApp.Models
         public ICollection<Group> Groups { get; set; }
     }
 
-    [Table("City")]
     public class City
     {
-        public int CityId { get; set; }
+        public int CityId { get; set; } 
+
         public string CityName { get; set; }
-        public ICollection<Student> Students { get; set; }
+
         public ICollection<Teacher> Teachers { get; set; }
     }
+
 
     public class Course
     {
@@ -32,24 +34,30 @@ namespace ScheduleWebApp.Models
 
     public class Teacher
     {
-        public int TeacherId { get; set; }
+        public int TeacherId { get; set; } 
+
         public string FirstName { get; set; }
         public string MiddleName { get; set; }
         public string LastName { get; set; }
+
         public DateTime? BirthDate { get; set; }
+
+        public int? CityId { get; set; }  
+
+        public City City { get; set; }
+
         public string Address { get; set; }
         public string Email { get; set; }
-        public long Phone { get; set; }
-        public int CityId { get; set; }  
-        public City City { get; set; }  
-        public ICollection<CourseTeacher> CourseTeachers { get; set; }
+
+        [Phone(ErrorMessage = "Неверный формат номера телефона")]
+        public string Phone { get; set; }
     }
 
 
     public class CourseTeacher
     {
         public int CourseTeacherId { get; set; }
-        public int TeacherId { get; set; }
+        public int TeacherId { get; set; } 
         public Teacher Teacher { get; set; }
         public int CourseId { get; set; }
         public Course Course { get; set; }
@@ -74,13 +82,13 @@ namespace ScheduleWebApp.Models
         public string MiddleName { get; set; }
         public string LastName { get; set; }
         public DateTime? BirthDate { get; set; }
+        public int? CityId { get; set; }
         public string Address { get; set; }
         public string Email { get; set; }
-        public long Phone { get; set; }
-        public long ParentPhone { get; set; }
-        public int? CityId { get; set; }
-        public City City { get; set; }
-        public ICollection<StudentGroup> StudentGroups { get; set; }
+
+        [Phone(ErrorMessage = "Неверный формат телефона")]
+        public string Phone { get; set; }
+        public string ParentPhone { get; set; }
     }
 
     public class StudentGroup
@@ -182,10 +190,5 @@ namespace ScheduleWebApp.Models
         public DateTime? CreatedAt { get; set; }
         public ICollection<Schedule> CreatedSchedules { get; set; }
         public ICollection<Schedule> UpdatedSchedules { get; set; }
-
-        
-
     }
-
-
 }
