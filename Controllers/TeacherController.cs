@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using ScheduleWebApp.Data;
-using ScheduleWebApp.Models;
+using ScheduleWebApp.Models.Entities;
+using ScheduleWebApp.Services;
 using System.Text;
 
 namespace ScheduleWebApp.Controllers
@@ -10,26 +12,22 @@ namespace ScheduleWebApp.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<TeacherController> _logger;
+        private readonly PhoneValidator _phoneValidator;
 
-        public TeacherController(AppDbContext context, ILogger<TeacherController> logger)
+        public TeacherController(AppDbContext context, ILogger<TeacherController> logger, PhoneValidator phoneValidator)
         {
             _context = context;
             _logger = logger;
+            _phoneValidator = phoneValidator;
         }
 
         public IActionResult Index()
         {
             try
             {
-                var teachers = _context.Teachers
-                    .AsNoTracking()
-                    .Include(t => t.City)
-                    .OrderBy(t => t.LastName)
-                    .ThenBy(t => t.FirstName)
-                    .ToList();
-
+                List<Teacher.TeacherListItemDto> teachers = Teacher.GetAllTeachers(_context);
                 _logger.LogInformation("Успешно загружено {Count} преподавателей", teachers.Count);
-                return View(teachers);
+                return View("Index", teachers);
             }
             catch (Exception ex)
             {
@@ -39,50 +37,59 @@ namespace ScheduleWebApp.Controllers
             }
         }
 
+
+        [HttpGet]
         public IActionResult Create()
         {
-            LoadCities();
-            return View();
+            ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+            return View(new Teacher.TeacherEditDto());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Teacher teacher)
+        public IActionResult Create(Teacher.TeacherEditDto dto)
         {
             try
             {
-                NormalizePhoneNumber(teacher);
+                dto.Phone = _phoneValidator.Normalize(dto.Phone);
 
                 if (!ModelState.IsValid)
                 {
                     LogModelStateErrors();
-                    LoadCities();
-                    return View(teacher);
+                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    return View(dto);
                 }
 
-                if (!ValidatePhoneNumber(teacher.Phone))
+                if (!_phoneValidator.IsValid(dto.Phone))
                 {
                     ModelState.AddModelError("Phone", "Номер должен содержать минимум 10 цифр");
-                    LoadCities();
-                    return View(teacher);
+                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    return View(dto);
                 }
 
-                _context.Teachers.Add(teacher);
-                _context.SaveChanges();
+                Teacher.CreateTeacher(_context, dto);
 
                 _logger.LogInformation("Создан преподаватель: {FullName} (ID: {Id})",
-                    GetFullName(teacher), teacher.TeacherId);
+                    $"{dto.LastName} {dto.FirstName} {dto.MiddleName}".Trim(), dto.TeacherId);
 
                 TempData["SuccessMessage"] = "Преподаватель успешно добавлен";
                 return RedirectToAction(nameof(Index));
             }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                ModelState.AddModelError("Email", ex.Message);
+                ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                return View(dto);
+            }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "Ошибка базы данных при создании преподавателя");
-                ModelState.AddModelError("", "Не удалось сохранить данные. Возможно, преподаватель с таким email уже существует.");
-                LoadCities();
-                return View(teacher);
+                _logger.LogError(ex, "Ошибка базы данных при создании преподавателя. Сообщение: {Message}", ex.InnerException?.Message ?? ex.Message);
+                ModelState.AddModelError("", "Не удалось сохранить данные. Проверьте корректность заполнения.");
+                ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                return View(dto);
             }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при создании преподавателя");
@@ -91,18 +98,38 @@ namespace ScheduleWebApp.Controllers
             }
         }
 
-        public IActionResult Edit(long id)
+        public IActionResult Details(int id)
         {
             try
             {
-                var teacher = _context.Teachers.Find(id);
+                Teacher.TeacherDetailsDto teacher = Teacher.GetTeacherDetails(_context, id);
+                if (teacher == null)
+                {
+                    _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
+                    return NotFound();
+                }
+                return View(teacher);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при загрузке данных преподавателя (ID: {Id})", id);
+                TempData["ErrorMessage"] = "Не удалось загрузить данные преподавателя";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public IActionResult Edit(int id)
+        {
+            try
+            {
+                Teacher.TeacherEditDto teacher = Teacher.GetTeacherForEdit(_context, id);
                 if (teacher == null)
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
                     return NotFound();
                 }
 
-                LoadCities();
+                ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
                 return View(teacher);
             }
             catch (Exception ex)
@@ -115,45 +142,43 @@ namespace ScheduleWebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(long id, Teacher teacher)
+        public IActionResult Edit(int id, Teacher.TeacherEditDto dto)
         {
-            if (id != teacher.TeacherId)
+            if (id != dto.TeacherId)
             {
-                _logger.LogWarning("Несоответствие ID: запрошенный {Id}, полученный {TeacherId}",
-                    id, teacher.TeacherId);
+                _logger.LogWarning("Несоответствие ID: запрошенный {Id}, полученный {TeacherId}", id, dto.TeacherId);
                 return NotFound();
             }
 
             try
             {
-                NormalizePhoneNumber(teacher);
+                dto.Phone = _phoneValidator.Normalize(dto.Phone);
 
                 if (!ModelState.IsValid)
                 {
                     LogModelStateErrors();
-                    LoadCities();
-                    return View(teacher);
+                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    return View(dto);
                 }
 
-                if (!ValidatePhoneNumber(teacher.Phone))
+                if (!_phoneValidator.IsValid(dto.Phone))
                 {
                     ModelState.AddModelError("Phone", "Номер должен содержать минимум 10 цифр");
-                    LoadCities();
-                    return View(teacher);
+                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    return View(dto);
                 }
 
-                _context.Update(teacher);
-                _context.SaveChanges();
+                Teacher.UpdateTeacher(_context, dto);
 
-                _logger.LogInformation("Обновлен преподаватель: {FullName} (ID: {Id})",
-                    GetFullName(teacher), teacher.TeacherId);
+                _logger.LogInformation("Обновлён преподаватель: {FullName} (ID: {Id})",
+                    $"{dto.LastName} {dto.FirstName} {dto.MiddleName}".Trim(), dto.TeacherId);
 
                 TempData["SuccessMessage"] = "Данные преподавателя обновлены";
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                if (!TeacherExists(id))
+                if (!Teacher.TeacherExists(_context, id))
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
                     return NotFound();
@@ -171,14 +196,11 @@ namespace ScheduleWebApp.Controllers
             }
         }
 
-        public IActionResult Delete(long id)
+        public IActionResult Delete(int id)
         {
             try
             {
-                var teacher = _context.Teachers
-                    .Include(t => t.City)
-                    .FirstOrDefault(t => t.TeacherId == id);
-
+                Teacher.TeacherDetailsDto teacher = Teacher.GetTeacherDetails(_context, id);
                 if (teacher == null)
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
@@ -197,23 +219,18 @@ namespace ScheduleWebApp.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(long id)
+        public IActionResult DeleteConfirmed(int id)
         {
             try
             {
-                var teacher = _context.Teachers.Find(id);
-                if (teacher == null)
+                bool result = Teacher.DeleteTeacher(_context, id);
+                if (!result)
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
                     return NotFound();
                 }
 
-                _context.Teachers.Remove(teacher);
-                _context.SaveChanges();
-
-                _logger.LogInformation("Удален преподаватель: {FullName} (ID: {Id})",
-                    GetFullName(teacher), id);
-
+                _logger.LogInformation("Удален преподаватель с ID: {Id}", id);
                 TempData["SuccessMessage"] = "Преподаватель успешно удален";
                 return RedirectToAction(nameof(Index));
             }
@@ -231,57 +248,17 @@ namespace ScheduleWebApp.Controllers
             }
         }
 
-        #region Вспомогательные методы
-
-        private void LoadCities()
-        {
-            ViewBag.Cities = _context.Cities
-                .AsNoTracking()
-                .OrderBy(c => c.CityName)
-                .ToList();
-        }
-
-        private bool TeacherExists(long id)
-        {
-            return _context.Teachers.Any(e => e.TeacherId == id);
-        }
-
-        private void NormalizePhoneNumber(Teacher teacher)
-        {
-            if (!string.IsNullOrEmpty(teacher.Phone))
-            {
-                teacher.Phone = new string(teacher.Phone
-                    .Where(c => char.IsDigit(c) || c == '+')
-                    .ToArray());
-            }
-        }
-
-        private bool ValidatePhoneNumber(string phone)
-        {
-            if (string.IsNullOrEmpty(phone))
-                return true;
-            var digitCount = phone.Count(char.IsDigit);
-            return digitCount >= 10;
-        }
-
         private void LogModelStateErrors()
         {
-            var errors = new StringBuilder("Ошибки валидации:\n");
-            foreach (var entry in ModelState)
+            StringBuilder errors = new StringBuilder("Ошибки валидации:\n");
+            foreach (KeyValuePair<string, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateEntry> entry in ModelState)
             {
-                foreach (var error in entry.Value.Errors)
+                foreach (ModelError error in entry.Value.Errors)
                 {
                     errors.AppendLine($"{entry.Key}: {error.ErrorMessage}");
                 }
             }
             _logger.LogWarning(errors.ToString());
         }
-
-        private string GetFullName(Teacher teacher)
-        {
-            return $"{teacher.LastName} {teacher.FirstName} {teacher.MiddleName}".Trim();
-        }
-
-        #endregion
     }
 }

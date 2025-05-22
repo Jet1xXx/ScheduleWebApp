@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using ScheduleWebApp.Data;
+using ScheduleWebApp.Models.Entities;
+using ScheduleWebApp.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<PhoneValidator>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -17,7 +21,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
 }
 
 app.UseHttpsRedirection();

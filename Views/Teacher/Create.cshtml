@@ -1,89 +1,78 @@
-﻿@model ScheduleWebApp.Models.Teacher
+﻿@model ScheduleWebApp.Models.Entities.Teacher.TeacherEditDto
+
 @{
     ViewData["Title"] = "Добавить преподавателя";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">@ViewData["Title"]</h2>
+<h1>@ViewData["Title"]</h1>
 
-    <form asp-action="Create" method="post" class="needs-validation" novalidate>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group mb-3">
-                    <label asp-for="LastName" class="form-label">Фамилия*</label>
-                    <input asp-for="LastName" class="form-control" required />
-                    <span asp-validation-for="LastName" class="text-danger"></span>
-                </div>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="FirstName" class="form-label">Имя*</label>
-                    <input asp-for="FirstName" class="form-control" required />
-                    <span asp-validation-for="FirstName" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="MiddleName" class="form-label">Отчество</label>
-                    <input asp-for="MiddleName" class="form-control" />
-                    <span asp-validation-for="MiddleName" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="Email" class="form-label">Email*</label>
-                    <input asp-for="Email" class="form-control" type="email" required />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
+            <div class="form-group">
+                <label asp-for="LastName" class="control-label"></label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
             </div>
 
-            <div class="col-md-6">
-                <div class="form-group mb-3">
-                    <label asp-for="BirthDate" class="form-label">Дата рождения</label>
-                    <input asp-for="BirthDate" class="form-control" type="date" />
-                    <span asp-validation-for="BirthDate" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="Phone" class="form-label">Телефон</label>
-                    <input asp-for="Phone" class="form-control" type="tel"
-                           placeholder="+7 (XXX) XXX-XX-XX" />
-                    <span asp-validation-for="Phone" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="Address" class="form-label">Адрес</label>
-                    <input asp-for="Address" class="form-control" />
-                    <span asp-validation-for="Address" class="text-danger"></span>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="CityId" class="form-label">Город</label>
-                    <select asp-for="CityId" class="form-select"
-                            asp-items="@(new SelectList(ViewBag.Cities, "CityId", "CityName"))">
-                        <option value="">-- выберите город --</option>
-                    </select>
-                    <span asp-validation-for="CityId" class="text-danger"></span>
-                </div>
+            <div class="form-group">
+                <label asp-for="FirstName" class="control-label"></label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
             </div>
-        </div>
 
-        <div class="form-group mt-4">
-            <button type="submit" class="btn btn-primary me-2">
-                <i class="fas fa-save"></i> Добавить
-            </button>
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Назад к списку
-            </a>
-        </div>
-    </form>
+            <div class="form-group">
+                <label asp-for="MiddleName" class="control-label"></label>
+                <input asp-for="MiddleName" class="form-control" />
+                <span asp-validation-for="MiddleName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="BirthDate" class="control-label"></label>
+                <input asp-for="BirthDate" class="form-control" type="date" />
+                <span asp-validation-for="BirthDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Address" class="control-label"></label>
+                <input asp-for="Address" class="form-control" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Phone" class="control-label"></label>
+                <input asp-for="Phone" class="form-control" />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CityId" class="control-label"></label>
+                <select asp-for="CityId"
+                        asp-items="ViewBag.Cities"
+                        class="form-control">
+                    <option value="">-- Выберите город --</option>
+                </select>
+                <span asp-validation-for="CityId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Создать" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
-    <script>
-        $(document).ready(function() {
-            $('#Phone').inputmask('+7 (999) 999-99-99');
-        });
-    </script>
 }

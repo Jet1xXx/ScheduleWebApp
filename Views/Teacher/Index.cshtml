@@ -1,36 +1,45 @@
-﻿@model IEnumerable<ScheduleWebApp.Models.Teacher>
+﻿@model IEnumerable<ScheduleWebApp.Models.Entities.Teacher.TeacherListItemDto>
 
 @{
     ViewData["Title"] = "Преподаватели";
 }
 
-<h1>Преподаватели</h1>
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
 
 <p>
-    <a href="@Url.Action("Create")" class="btn btn-primary">Добавить нового преподавателя</a>
+    <a asp-action="Create" class="btn btn-primary">Добавить преподавателя</a>
 </p>
 
 <table class="table">
     <thead>
         <tr>
-            <th>Имя</th>
-            <th>Фамилия</th>
-            <th>Отчество</th>
+            <th>ФИО</th>
+            <th>Email</th>
+            <th>Телефон</th>
             <th>Город</th>
             <th>Действия</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var teacher in Model)
+        @foreach (var item in Model)
         {
             <tr>
-                <td>@teacher.FirstName</td>
-                <td>@teacher.LastName</td>
-                <td>@teacher.MiddleName</td>
-                <td>@teacher.City?.CityName</td>
+                <td>@item.FullName</td>
+                <td>@item.Email</td>
+                <td>@item.Phone</td>
+                <td>@(string.IsNullOrWhiteSpace(item.CityName) ? "—" : item.CityName)</td>
                 <td>
-                    <a href="@Url.Action("Edit", new { id = teacher.TeacherId })" class="btn btn-warning">Редактировать</a>
-                    <a href="@Url.Action("Delete", new { id = teacher.TeacherId })" class="btn btn-danger">Удалить</a>
+                    <a asp-action="Edit" asp-route-id="@item.TeacherId" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a asp-action="Delete" asp-route-id="@item.TeacherId" class="btn btn-sm btn-danger">Удалить</a>
                 </td>
             </tr>
         }
