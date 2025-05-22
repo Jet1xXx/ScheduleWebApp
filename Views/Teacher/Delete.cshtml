@@ -1,22 +1,68 @@
-﻿@model ScheduleWebApp.Models.Teacher
+﻿@model ScheduleWebApp.Models.Entities.Teacher.TeacherDetailsDto
+
 
 @{
-    ViewData["Title"] = "Удалить преподавателя";
+    ViewData["Title"] = "Удаление преподавателя";
 }
 
 <h1>@ViewData["Title"]</h1>
 
-<h3>Вы уверены, что хотите удалить преподавателя?</h3>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
 
+<h3>Вы уверены, что хотите удалить этого преподавателя?</h3>
 <div>
-    <h4>@Model.FirstName @Model.LastName</h4>
-    <p>Email: @Model.Email</p>
-    <p>Город: @Model.City?.CityName</p>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.LastName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.LastName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FirstName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FirstName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.MiddleName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.MiddleName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.BirthDate)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.BirthDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Email)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Email)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Phone)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Phone)
+        <dt class="col-sm-2">
+            Город
+        </dt>
+        <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.CityName)
+        </dd>
+
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="TeacherId" />
+        <input type="submit" value="Удалить" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+    </form>
 </div>
-
-<form asp-action="DeleteConfirmed" method="post">
-    <input type="hidden" asp-for="TeacherId" />
-    <button type="submit" class="btn btn-danger">Удалить</button>
-    <a href="@Url.Action("Index")" class="btn btn-secondary">Отмена</a>
-</form>
-

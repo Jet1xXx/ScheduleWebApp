@@ -1,14 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ScheduleWebApp.Models;
 
-namespace ScheduleWebApp.Data
+namespace ScheduleWebApp.Models.Entities
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-            : base(options)
-        {
-        }
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<AcademicYear> AcademicYears { get; set; }
         public DbSet<City> Cities { get; set; }
@@ -34,6 +31,7 @@ namespace ScheduleWebApp.Data
             modelBuilder.Entity<AcademicYear>(entity =>
             {
                 entity.ToTable("AcademicYear");
+                entity.HasKey(e => e.AcademicYearId);
                 entity.Property(e => e.AcademicYearId).HasColumnName("academic_year_id");
                 entity.Property(e => e.StartStudyDate).HasColumnName("start_study_date");
                 entity.Property(e => e.EndStudyDate).HasColumnName("end_study_date");
@@ -42,8 +40,9 @@ namespace ScheduleWebApp.Data
             modelBuilder.Entity<City>(entity =>
             {
                 entity.ToTable("City");
+                entity.HasKey(e => e.CityId);
                 entity.Property(e => e.CityId).HasColumnName("city_id");
-                entity.Property(e => e.CityName).HasColumnName("city_name");
+                entity.Property(e => e.CityName).HasColumnName("city_name").IsRequired();
             });
 
             modelBuilder.Entity<Course>(entity =>
@@ -56,24 +55,27 @@ namespace ScheduleWebApp.Data
 
             modelBuilder.Entity<Teacher>(entity =>
             {
-                entity.ToTable("Teacher");
-                entity.Property(e => e.TeacherId).HasColumnName("teacher_id");
-                entity.Property(e => e.FirstName).HasColumnName("first_name");
-                entity.Property(e => e.MiddleName).HasColumnName("middle_name");
-                entity.Property(e => e.LastName).HasColumnName("last_name");
-                entity.Property(e => e.BirthDate).HasColumnName("birth_date");
-                entity.Property(e => e.Address).HasColumnName("address");
-                entity.Property(e => e.Email).HasColumnName("email");
-                entity.Property(e => e.Phone).HasColumnName("phone");
-                entity.Property(e => e.CityId).HasColumnName("city_id");
+                
+                entity.HasOne(t => t.City)
+                      .WithMany(c => c.Teachers)
+                      .HasForeignKey(t => t.CityId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<CourseTeacher>(entity =>
             {
                 entity.ToTable("CourseTeacher");
-                entity.Property(e => e.CourseTeacherId).HasColumnName("course_teacher_id");
-                entity.Property(e => e.TeacherId).HasColumnName("teacher_id");
-                entity.Property(e => e.CourseId).HasColumnName("course_id");
+                entity.HasKey(e => e.CourseTeacherId);
+                
+                entity.HasOne(ct => ct.Teacher)
+                      .WithMany()
+                      .HasForeignKey(ct => ct.TeacherId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(ct => ct.Course)
+                      .WithMany(c => c.CourseTeachers)
+                      .HasForeignKey(ct => ct.CourseId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Group>(entity =>
@@ -103,9 +105,17 @@ namespace ScheduleWebApp.Data
             modelBuilder.Entity<StudentGroup>(entity =>
             {
                 entity.ToTable("StudentGroup");
-                entity.Property(e => e.StudentGroupId).HasColumnName("student_group_id");
-                entity.Property(e => e.StudentId).HasColumnName("student_id");
-                entity.Property(e => e.GroupId).HasColumnName("group_id");
+                entity.HasKey(e => e.StudentGroupId);
+                
+                entity.HasOne(sg => sg.Student)
+                      .WithMany()
+                      .HasForeignKey(sg => sg.StudentId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(sg => sg.Group)
+                      .WithMany(g => g.StudentGroups)
+                      .HasForeignKey(sg => sg.GroupId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Room>(entity =>
@@ -120,37 +130,54 @@ namespace ScheduleWebApp.Data
             modelBuilder.Entity<Schedule>(entity =>
             {
                 entity.ToTable("Schedule");
-                entity.Property(e => e.ScheduleId).HasColumnName("schedule_id");
-                entity.Property(e => e.SchedulеDate).HasColumnName("schedule_date");
-                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-                entity.Property(e => e.RoomId).HasColumnName("room_id");
-                entity.Property(e => e.TimeTableId).HasColumnName("time_table_id");
-                entity.Property(e => e.EnrollmentId).HasColumnName("enrollment_id");
-                entity.Property(e => e.HolidayId).HasColumnName("holiday_id");
-                entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-                entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+                entity.HasKey(e => e.ScheduleId);
+                
+                entity.HasOne(s => s.Room)
+                      .WithMany(r => r.Schedules)
+                      .HasForeignKey(s => s.RoomId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(s => s.TimeTable)
+                      .WithMany()
+                      .HasForeignKey(s => s.TimeTableId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(s => s.Enrollment)
+                      .WithMany(e => e.Schedules)
+                      .HasForeignKey(s => s.EnrollmentId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(s => s.CreatedUser)
+                      .WithMany(u => u.CreatedSchedules)
+                      .HasForeignKey(s => s.CreatedBy)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(s => s.UpdatedUser)
+                      .WithMany(u => u.UpdatedSchedules)
+                      .HasForeignKey(s => s.UpdatedBy)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<ScheduleReplacement>(entity =>
             {
                 entity.ToTable("ScheduleReplacement");
-                entity.Property(e => e.ScheduleReplacementId).HasColumnName("schedule_replacement_id");
-                entity.Property(e => e.ReplacementDate).HasColumnName("replacement_date");
-                entity.Property(e => e.ScheduleId).HasColumnName("schedule_id");
-                entity.Property(e => e.NewRoomId).HasColumnName("new_room_id");
-                entity.Property(e => e.NewTimeTableId).HasColumnName("new_time_table_id");
-                entity.Property(e => e.NewEnrollmentId).HasColumnName("new_enrollment_id");
+                entity.HasKey(e => e.ScheduleReplacementId);
+                
+                entity.HasOne(sr => sr.Schedule)
+                      .WithMany(s => s.Replacements)
+                      .HasForeignKey(sr => sr.ScheduleId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<TimeTable>(entity =>
             {
                 entity.ToTable("TimeTable");
-                entity.Property(e => e.TimeTableId).HasColumnName("time_table_id");
-                entity.Property(e => e.StartTime).HasColumnName("start_time");
-                entity.Property(e => e.EndTime).HasColumnName("end_time");
-                entity.Property(e => e.LessonNumber).HasColumnName("lesson_number");
-                entity.Property(e => e.ScheduleTypeId).HasColumnName("schedule_type_id");
+                entity.HasKey(e => e.TimeTableId);
+                
+                entity.HasOne(tt => tt.ScheduleType)
+                      .WithMany(st => st.TimeTables)
+                      .HasForeignKey(tt => tt.ScheduleTypeId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<ScheduleType>(entity =>
@@ -195,6 +222,22 @@ namespace ScheduleWebApp.Data
                       .HasForeignKey(s => s.UpdatedBy)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<Teacher>()
+                .HasIndex(t => t.Email)
+                .IsUnique()
+                .HasFilter("[email] IS NOT NULL");
+                
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.Email)
+                .IsUnique()
+                .HasFilter("[email] IS NOT NULL");
+                
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
+
         }
     }
 }
