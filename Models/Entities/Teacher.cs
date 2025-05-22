@@ -8,20 +8,16 @@ namespace ScheduleWebApp.Models.Entities
     [Table("Teacher")]
     public class Teacher
     {
-        [Key]
         [Column("teacher_id")]
         public int TeacherId { get; set; }
 
-        [Required]
         [StringLength(50)]
         [Column("first_name")]
         public string FirstName { get; set; }
 
-        [StringLength(50)]
         [Column("middle_name")]
         public string MiddleName { get; set; }
 
-        [Required]
         [StringLength(50)]
         [Column("last_name")]
         public string LastName { get; set; }
@@ -35,19 +31,15 @@ namespace ScheduleWebApp.Models.Entities
         [ForeignKey("CityId")]
         public City? City { get; set; }
 
-        [StringLength(200)]
         [Column("address")]
         public string Address { get; set; }
 
-        [EmailAddress]
         [Column("email")]
         public string Email { get; set; }
 
-        [Phone]
         [Column("phone")]
         public string Phone { get; set; }
 
-        // -------------------- DTOs --------------------
 
         public class TeacherListItemDto
         {
@@ -99,7 +91,6 @@ namespace ScheduleWebApp.Models.Entities
             public string Phone { get; set; }
         }
 
-        // -------------------- Static Methods --------------------
 
         public static List<TeacherListItemDto> GetAllTeachers(AppDbContext context)
         {
