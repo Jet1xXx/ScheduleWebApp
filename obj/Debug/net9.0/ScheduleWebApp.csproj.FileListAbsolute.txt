@@ -198,3 +198,4 @@ C:\Users\Jet1x\source\repos\Schedule\ScheduleWebApp\bin\Debug\net9.0\zh-Hant\Mic
 C:\Users\Jet1x\source\repos\Schedule\ScheduleWebApp\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 C:\Users\Jet1x\source\repos\Schedule\ScheduleWebApp\obj\Debug\net9.0\ScheduleWebApp.sourcelink.json
 C:\Users\Jet1x\source\repos\Schedule\ScheduleWebApp\bin\Debug\net9.0\Serilog.dll
+C:\Users\Jet1x\source\repos\Schedule\ScheduleWebApp\bin\Debug\net9.0\Dapper.dll

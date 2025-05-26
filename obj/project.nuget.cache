@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "Z6Rghik/lPc=",
+  "dgSpecHash": "le3ci3/u2fk=",
   "success": true,
   "projectFilePath": "C:\\Users\\Jet1x\\source\\repos\\Schedule\\ScheduleWebApp\\ScheduleWebApp.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Jet1x\\.nuget\\packages\\dapper\\2.1.66\\dapper.2.1.66.nupkg.sha512",
     "C:\\Users\\Jet1x\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\Jet1x\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\7.0.0\\microsoft.bcl.asyncinterfaces.7.0.0.nupkg.sha512",
     "C:\\Users\\Jet1x\\.nuget\\packages\\microsoft.build.framework\\17.8.3\\microsoft.build.framework.17.8.3.nupkg.sha512",

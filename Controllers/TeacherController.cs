@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ScheduleWebApp.Models.Entities;
 using ScheduleWebApp.Services;
@@ -13,35 +12,36 @@ namespace ScheduleWebApp.Controllers
         private readonly AppDbContext _context;
         private readonly ILogger<TeacherController> _logger;
         private readonly PhoneValidator _phoneValidator;
+        private readonly TeacherService _teacherService;
 
         public TeacherController(AppDbContext context, ILogger<TeacherController> logger, PhoneValidator phoneValidator)
         {
             _context = context;
             _logger = logger;
             _phoneValidator = phoneValidator;
+            _teacherService = new TeacherService(_context);
         }
 
         public IActionResult Index()
         {
             try
             {
-                List<Teacher.TeacherListItemDto> teachers = Teacher.GetAllTeachers(_context);
-                _logger.LogInformation("Успешно загружено {Count} преподавателей", teachers.Count);
-                return View("Index", teachers);
+                List<Teacher.TeacherListItemDto> teacherList = _teacherService.GetAllTeachers();
+                _logger.LogInformation("Успешно загружено {Count} преподавателей", teacherList.Count);
+                return View("Index", teacherList);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при загрузке списка преподавателей");
+                _logger.LogError(exception, "Ошибка при загрузке списка преподавателей");
                 TempData["ErrorMessage"] = "Не удалось загрузить список преподавателей";
                 return RedirectToAction("Error", "Home");
             }
         }
 
-
         [HttpGet]
         public IActionResult Create()
         {
-            ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+            ViewBag.Cities = _teacherService.GetCitiesDropdown();
             return View(new Teacher.TeacherEditDto());
         }
 
@@ -56,18 +56,18 @@ namespace ScheduleWebApp.Controllers
                 if (!ModelState.IsValid)
                 {
                     LogModelStateErrors();
-                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    ViewBag.Cities = _teacherService.GetCitiesDropdown();
                     return View(dto);
                 }
 
                 if (!_phoneValidator.IsValid(dto.Phone))
                 {
                     ModelState.AddModelError("Phone", "Номер должен содержать минимум 10 цифр");
-                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    ViewBag.Cities = _teacherService.GetCitiesDropdown();
                     return View(dto);
                 }
 
-                Teacher.CreateTeacher(_context, dto);
+                _teacherService.CreateTeacher(dto);
 
                 _logger.LogInformation("Создан преподаватель: {FullName} (ID: {Id})",
                     $"{dto.LastName} {dto.FirstName} {dto.MiddleName}".Trim(), dto.TeacherId);
@@ -75,24 +75,23 @@ namespace ScheduleWebApp.Controllers
                 TempData["SuccessMessage"] = "Преподаватель успешно добавлен";
                 return RedirectToAction(nameof(Index));
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException exception)
             {
-                _logger.LogWarning(ex.Message);
-                ModelState.AddModelError("Email", ex.Message);
-                ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                _logger.LogWarning(exception.Message);
+                ModelState.AddModelError("Email", exception.Message);
+                ViewBag.Cities = _teacherService.GetCitiesDropdown();
                 return View(dto);
             }
-            catch (DbUpdateException ex)
+            catch (DbUpdateException exception)
             {
-                _logger.LogError(ex, "Ошибка базы данных при создании преподавателя. Сообщение: {Message}", ex.InnerException?.Message ?? ex.Message);
+                _logger.LogError(exception, "Ошибка базы данных при создании преподавателя. Сообщение: {Message}", exception.InnerException?.Message ?? exception.Message);
                 ModelState.AddModelError("", "Не удалось сохранить данные. Проверьте корректность заполнения.");
-                ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                ViewBag.Cities = _teacherService.GetCitiesDropdown();
                 return View(dto);
             }
-
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при создании преподавателя");
+                _logger.LogError(exception, "Ошибка при создании преподавателя");
                 TempData["ErrorMessage"] = "Произошла непредвиденная ошибка";
                 return RedirectToAction(nameof(Index));
             }
@@ -102,7 +101,7 @@ namespace ScheduleWebApp.Controllers
         {
             try
             {
-                Teacher.TeacherDetailsDto teacher = Teacher.GetTeacherDetails(_context, id);
+                Teacher.TeacherDetailsDto teacher = _teacherService.GetTeacherDetails(id);
                 if (teacher == null)
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
@@ -110,9 +109,9 @@ namespace ScheduleWebApp.Controllers
                 }
                 return View(teacher);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при загрузке данных преподавателя (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка при загрузке данных преподавателя (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Не удалось загрузить данные преподавателя";
                 return RedirectToAction(nameof(Index));
             }
@@ -122,19 +121,19 @@ namespace ScheduleWebApp.Controllers
         {
             try
             {
-                Teacher.TeacherEditDto teacher = Teacher.GetTeacherForEdit(_context, id);
+                Teacher.TeacherEditDto teacher = _teacherService.GetTeacherForEdit(id);
                 if (teacher == null)
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
                     return NotFound();
                 }
 
-                ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                ViewBag.Cities = _teacherService.GetCitiesDropdown();
                 return View(teacher);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при загрузке формы редактирования (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка при загрузке формы редактирования (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Не удалось загрузить данные преподавателя";
                 return RedirectToAction(nameof(Index));
             }
@@ -157,18 +156,18 @@ namespace ScheduleWebApp.Controllers
                 if (!ModelState.IsValid)
                 {
                     LogModelStateErrors();
-                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    ViewBag.Cities = _teacherService.GetCitiesDropdown();
                     return View(dto);
                 }
 
                 if (!_phoneValidator.IsValid(dto.Phone))
                 {
                     ModelState.AddModelError("Phone", "Номер должен содержать минимум 10 цифр");
-                    ViewBag.Cities = Teacher.GetCitiesDropdown(_context);
+                    ViewBag.Cities = _teacherService.GetCitiesDropdown();
                     return View(dto);
                 }
 
-                Teacher.UpdateTeacher(_context, dto);
+                _teacherService.UpdateTeacher(dto);
 
                 _logger.LogInformation("Обновлён преподаватель: {FullName} (ID: {Id})",
                     $"{dto.LastName} {dto.FirstName} {dto.MiddleName}".Trim(), dto.TeacherId);
@@ -176,21 +175,21 @@ namespace ScheduleWebApp.Controllers
                 TempData["SuccessMessage"] = "Данные преподавателя обновлены";
                 return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateConcurrencyException ex)
+            catch (DbUpdateConcurrencyException exception)
             {
-                if (!Teacher.TeacherExists(_context, id))
+                if (!_teacherService.TeacherExists(id))
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
                     return NotFound();
                 }
 
-                _logger.LogError(ex, "Ошибка конкурентного доступа при редактировании (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка конкурентного доступа при редактировании (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Данные были изменены другим пользователем. Пожалуйста, обновите страницу.";
                 return RedirectToAction(nameof(Edit), new { id });
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при обновлении преподавателя (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка при обновлении преподавателя (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Произошла ошибка при обновлении данных";
                 return RedirectToAction(nameof(Index));
             }
@@ -200,7 +199,7 @@ namespace ScheduleWebApp.Controllers
         {
             try
             {
-                Teacher.TeacherDetailsDto teacher = Teacher.GetTeacherDetails(_context, id);
+                Teacher.TeacherDetailsDto teacher = _teacherService.GetTeacherDetails(id);
                 if (teacher == null)
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
@@ -209,9 +208,9 @@ namespace ScheduleWebApp.Controllers
 
                 return View(teacher);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при загрузке формы удаления (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка при загрузке формы удаления (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Не удалось загрузить данные преподавателя";
                 return RedirectToAction(nameof(Index));
             }
@@ -223,8 +222,8 @@ namespace ScheduleWebApp.Controllers
         {
             try
             {
-                bool result = Teacher.DeleteTeacher(_context, id);
-                if (!result)
+                bool deleted = _teacherService.DeleteTeacher(id);
+                if (!deleted)
                 {
                     _logger.LogWarning("Преподаватель с ID: {Id} не найден", id);
                     return NotFound();
@@ -234,15 +233,15 @@ namespace ScheduleWebApp.Controllers
                 TempData["SuccessMessage"] = "Преподаватель успешно удален";
                 return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateException ex)
+            catch (DbUpdateException exception)
             {
-                _logger.LogError(ex, "Ошибка базы данных при удалении (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка базы данных при удалении (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Не удалось удалить преподавателя. Возможно, есть связанные данные.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при удалении преподавателя (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка при удалении преподавателя (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Произошла непредвиденная ошибка";
                 return RedirectToAction(nameof(Index));
             }
@@ -250,15 +249,15 @@ namespace ScheduleWebApp.Controllers
 
         private void LogModelStateErrors()
         {
-            StringBuilder errors = new StringBuilder("Ошибки валидации:\n");
-            foreach (KeyValuePair<string, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateEntry> entry in ModelState)
+            StringBuilder errorMessageBuilder = new StringBuilder("Ошибки валидации:\n");
+            foreach (KeyValuePair<string, ModelStateEntry> modelStateEntry in ModelState)
             {
-                foreach (ModelError error in entry.Value.Errors)
+                foreach (ModelError modelError in modelStateEntry.Value.Errors)
                 {
-                    errors.AppendLine($"{entry.Key}: {error.ErrorMessage}");
+                    errorMessageBuilder.AppendLine($"{modelStateEntry.Key}: {modelError.ErrorMessage}");
                 }
             }
-            _logger.LogWarning(errors.ToString());
+            _logger.LogWarning(errorMessageBuilder.ToString());
         }
     }
 }

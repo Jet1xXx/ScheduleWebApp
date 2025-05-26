@@ -5,6 +5,8 @@ using ScheduleWebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+
 builder.Services.AddScoped<PhoneValidator>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
