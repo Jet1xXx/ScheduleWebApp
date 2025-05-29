@@ -13,6 +13,7 @@ namespace ScheduleWebApp.Services
             _context = context;
         }
 
+        //доработать 
         public List<Teacher.TeacherListItemDto> GetAllTeachers()
         {
             return _context.Teachers
@@ -30,63 +31,32 @@ namespace ScheduleWebApp.Services
                 })
                 .ToList();
         }
-
-        public Teacher.TeacherDetailsDto GetTeacherDetails(int teacherId)
+       
+        public Teacher.TeacherDto GetTeacher(int teacherId)
         {
             return _context.Teachers
                 .AsNoTracking()
-                .Include(teacher => teacher.City)
-                .Where(teacher => teacher.TeacherId == teacherId)
-                .Select(teacher => new Teacher.TeacherDetailsDto
+                .Include(t => t.City)
+                .Where(t => t.TeacherId == teacherId)
+                .Select(t => new Teacher.TeacherDto
                 {
-                    TeacherId = teacher.TeacherId,
-                    FirstName = teacher.FirstName,
-                    MiddleName = teacher.MiddleName,
-                    LastName = teacher.LastName,
-                    BirthDate = teacher.BirthDate,
-                    Address = teacher.Address,
-                    Email = teacher.Email,
-                    Phone = teacher.Phone,
-                    CityName = teacher.City != null ? teacher.City.CityName : null,
-                    CityId = teacher.CityId
+                    TeacherId = t.TeacherId,
+                    FirstName = t.FirstName,
+                    MiddleName = t.MiddleName,
+                    LastName = t.LastName,
+                    BirthDate = t.BirthDate,
+                    CityId = t.CityId,
+                    Address = t.Address,
+                    Email = t.Email,
+                    Phone = t.Phone,
+                    CityName = t.City != null ? t.City.CityName : null
                 })
                 .FirstOrDefault();
         }
 
-        public Teacher.TeacherEditDto GetTeacherForEdit(int teacherId)
-        {
-            return _context.Teachers
-                .AsNoTracking()
-                .Where(teacher => teacher.TeacherId == teacherId)
-                .Select(teacher => new Teacher.TeacherEditDto
-                {
-                    TeacherId = teacher.TeacherId,
-                    FirstName = teacher.FirstName,
-                    MiddleName = teacher.MiddleName,
-                    LastName = teacher.LastName,
-                    BirthDate = teacher.BirthDate,
-                    CityId = teacher.CityId,
-                    Address = teacher.Address,
-                    Email = teacher.Email,
-                    Phone = teacher.Phone
-                })
-                .FirstOrDefault();
-        }
+       
 
-        public List<SelectListItem> GetCitiesDropdown()
-        {
-            return _context.Cities
-                .AsNoTracking()
-                .OrderBy(city => city.CityName)
-                .Select(city => new SelectListItem
-                {
-                    Value = city.CityId.ToString(),
-                    Text = city.CityName
-                })
-                .ToList();
-        }
-
-        public void CreateTeacher(Teacher.TeacherEditDto teacherDto)
+        public void CreateTeacher(Teacher.TeacherDto teacherDto)
         {
             Teacher newTeacher = new Teacher
             {
@@ -98,7 +68,7 @@ namespace ScheduleWebApp.Services
                     : null,
                 CityId = teacherDto.CityId,
                 Address = teacherDto.Address,
-                Email = teacherDto.Email?.Trim().ToLower(),
+                Email = teacherDto.Email?.Trim().ToLower(), 
                 Phone = teacherDto.Phone
             };
 
@@ -108,7 +78,9 @@ namespace ScheduleWebApp.Services
             teacherDto.TeacherId = newTeacher.TeacherId;
         }
 
-        public void UpdateTeacher(Teacher.TeacherEditDto teacherDto)
+
+        //ОШИБКИ В КОНТРОЛЛЕРЕ
+        public void UpdateTeacher(Teacher.TeacherDto teacherDto)
         {
             Teacher existingTeacher = _context.Teachers.Find(teacherDto.TeacherId);
             if (existingTeacher == null) return;
@@ -135,9 +107,6 @@ namespace ScheduleWebApp.Services
             return true;
         }
 
-        public bool TeacherExists(int teacherId)
-        {
-            return _context.Teachers.Any(teacher => teacher.TeacherId == teacherId);
-        }
+      
     }
 }

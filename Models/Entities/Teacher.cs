@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -47,21 +48,8 @@ namespace ScheduleWebApp.Models.Entities
             public string CityName { get; set; }
         }
 
-        public class TeacherDetailsDto
-        {
-            public int TeacherId { get; set; }
-            public string FirstName { get; set; }
-            public string MiddleName { get; set; }
-            public string LastName { get; set; }
-            public DateTime? BirthDate { get; set; }
-            public string Address { get; set; }
-            public string Email { get; set; }
-            public string Phone { get; set; }
-            public string CityName { get; set; }
-            public int? CityId { get; set; }
-        }
-
-        public class TeacherEditDto
+        // ✅ Новый универсальный DTO
+        public class TeacherDto
         {
             public int TeacherId { get; set; }
 
@@ -90,6 +78,12 @@ namespace ScheduleWebApp.Models.Entities
             [Phone]
             [StringLength(20)]
             public string Phone { get; set; }
+
+            // Добавлено для отображения (например, в Details или List)
+            [BindNever]
+            [ScaffoldColumn(false)]
+            public string? CityName { get; set; }
+
         }
     }
 }
