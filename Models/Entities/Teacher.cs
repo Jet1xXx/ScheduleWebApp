@@ -48,7 +48,7 @@ namespace ScheduleWebApp.Models.Entities
             public string CityName { get; set; }
         }
 
-        // ✅ Новый универсальный DTO
+        //Новый универсальный DTO
         public class TeacherDto
         {
             public int TeacherId { get; set; }
@@ -79,7 +79,7 @@ namespace ScheduleWebApp.Models.Entities
             [StringLength(20)]
             public string Phone { get; set; }
 
-            // Добавлено для отображения (например, в Details или List)
+            // Добавлено для отображения (например в Details или List)
             [BindNever]
             [ScaffoldColumn(false)]
             public string? CityName { get; set; }

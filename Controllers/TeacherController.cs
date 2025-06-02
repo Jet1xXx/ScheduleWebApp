@@ -172,20 +172,6 @@ namespace ScheduleWebApp.Controllers
                     return View(dto);
                 }
 
-                Teacher.TeacherDto currentData = _teacherService.GetTeacher(id);
-
-                if (currentData.FirstName == dto.FirstName &&
-                    currentData.MiddleName == dto.MiddleName &&
-                    currentData.LastName == dto.LastName &&
-                    currentData.BirthDate == dto.BirthDate &&
-                    currentData.CityId == dto.CityId &&
-                    currentData.Address == dto.Address &&
-                    currentData.Email == dto.Email &&
-                    currentData.Phone == dto.Phone)
-                {
-                    TempData["InfoMessage"] = "Изменения не были внесены";
-                    return RedirectToAction(nameof(Index));
-                }
 
                 _teacherService.UpdateTeacher(dto);
 
