@@ -1,10 +1,10 @@
 ﻿namespace ScheduleWebApp.Services
 {
-    public class PhoneValidator
+    public static class PhoneValidator
     {
         private const int MinPhoneDigits = 10;
 
-        public string Normalize(string phone)
+        public static string Normalize(string phone)
         {
             if (string.IsNullOrEmpty(phone))
                 return phone;
@@ -14,7 +14,7 @@
                 .ToArray());
         }
 
-        public bool IsValid(string phone)
+        public static bool IsValid(string phone)
         {
             if (string.IsNullOrEmpty(phone))
                 return true;

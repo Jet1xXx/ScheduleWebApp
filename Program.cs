@@ -5,13 +5,11 @@ using ScheduleWebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-
-builder.Services.AddScoped<PhoneValidator>();
 builder.Services.AddScoped<CityService>();
-
+builder.Services.AddScoped<TeacherService>();          //TeacherService через DI
 
 builder.Services.AddDbContext<AppDbContext>(options =>
+
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllersWithViews();

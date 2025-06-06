@@ -11,19 +11,17 @@ namespace ScheduleWebApp.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<TeacherController> _logger;
-        private readonly PhoneValidator _phoneValidator;
         private readonly TeacherService _teacherService;
         private readonly CityService _cityService;
 
         public TeacherController(AppDbContext context,
                                   ILogger<TeacherController> logger,
-                                  PhoneValidator phoneValidator,
+                                  TeacherService teacherService,
                                   CityService cityService)
         {
             _context = context;
             _logger = logger;
-            _phoneValidator = phoneValidator;
-            _teacherService = new TeacherService(_context);
+            _teacherService = teacherService;
             _cityService = cityService;
         }
 
@@ -31,8 +29,14 @@ namespace ScheduleWebApp.Controllers
         {
             try
             {
+                System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 List<Teacher.TeacherListItemDto> teacherList = _teacherService.GetAllTeachers();
-                _logger.LogInformation("Успешно загружено {Count} преподавателей", teacherList.Count);
+                stopwatch.Stop();
+
+                _logger.LogInformation("Успешно загружено {Count} преподавателей за {ElapsedMilliseconds} мс",
+                    teacherList.Count, stopwatch.ElapsedMilliseconds);
+
+                ViewBag.ElapsedTime = stopwatch.ElapsedMilliseconds;
                 return View("Index", teacherList);
             }
             catch (Exception exception)
@@ -56,7 +60,7 @@ namespace ScheduleWebApp.Controllers
         {
             try
             {
-                dto.Phone = _phoneValidator.Normalize(dto.Phone);
+                dto.Phone = PhoneValidator.Normalize(dto.Phone);
 
                 if (!ModelState.IsValid)
                 {
@@ -65,7 +69,7 @@ namespace ScheduleWebApp.Controllers
                     return View(dto);
                 }
 
-                if (!_phoneValidator.IsValid(dto.Phone))
+                if (!PhoneValidator.IsValid(dto.Phone))
                 {
                     ModelState.AddModelError("Phone", "Номер должен содержать минимум 10 цифр");
                     ViewBag.Cities = _cityService.GetCitiesDropdown();
@@ -156,7 +160,7 @@ namespace ScheduleWebApp.Controllers
 
             try
             {
-                dto.Phone = _phoneValidator.Normalize(dto.Phone);
+                dto.Phone = PhoneValidator.Normalize(dto.Phone);
 
                 if (!ModelState.IsValid)
                 {
@@ -165,26 +169,11 @@ namespace ScheduleWebApp.Controllers
                     return View(dto);
                 }
 
-                if (!_phoneValidator.IsValid(dto.Phone))
+                if (!PhoneValidator.IsValid(dto.Phone))
                 {
                     ModelState.AddModelError("Phone", "Номер должен содержать минимум 10 цифр");
                     ViewBag.Cities = _cityService.GetCitiesDropdown();
                     return View(dto);
-                }
-
-                Teacher.TeacherDto currentData = _teacherService.GetTeacher(id);
-
-                if (currentData.FirstName == dto.FirstName &&
-                    currentData.MiddleName == dto.MiddleName &&
-                    currentData.LastName == dto.LastName &&
-                    currentData.BirthDate == dto.BirthDate &&
-                    currentData.CityId == dto.CityId &&
-                    currentData.Address == dto.Address &&
-                    currentData.Email == dto.Email &&
-                    currentData.Phone == dto.Phone)
-                {
-                    TempData["InfoMessage"] = "Изменения не были внесены";
-                    return RedirectToAction(nameof(Index));
                 }
 
                 _teacherService.UpdateTeacher(dto);
@@ -195,15 +184,15 @@ namespace ScheduleWebApp.Controllers
                 TempData["SuccessMessage"] = "Данные преподавателя обновлены";
                 return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateConcurrencyException ex)
+            catch (DbUpdateConcurrencyException exception)
             {
-                _logger.LogError(ex, "Ошибка конкурентного доступа (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка конкурентного доступа (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Данные были изменены другим пользователем. Пожалуйста, обновите страницу.";
                 return RedirectToAction(nameof(Edit), new { id });
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                _logger.LogError(ex, "Ошибка при обновлении (ID: {Id})", id);
+                _logger.LogError(exception, "Ошибка при обновлении (ID: {Id})", id);
                 TempData["ErrorMessage"] = "Произошла ошибка при обновлении данных";
                 return RedirectToAction(nameof(Index));
             }
