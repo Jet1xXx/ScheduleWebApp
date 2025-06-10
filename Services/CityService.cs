@@ -13,7 +13,6 @@ namespace ScheduleWebApp.Services
             _context = context;
         }
 
-        // Метод для получения списка городов в формате SelectListItem (для DropDown)
         public List<SelectListItem> GetCitiesDropdown()
         {
             return _context.Cities
@@ -27,7 +26,6 @@ namespace ScheduleWebApp.Services
                 .ToList();
         }
 
-        // Метод для вывода списка городов (например, в таблицу)
         public List<City> GetAllCities()
         {
             return _context.Cities
@@ -36,7 +34,6 @@ namespace ScheduleWebApp.Services
                 .ToList();
         }
 
-        // Метод для получения одного города по ID
         public City? GetCityById(int id)
         {
             return _context.Cities.Find(id);

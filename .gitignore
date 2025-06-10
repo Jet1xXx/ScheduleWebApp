@@ -1,0 +1,34 @@
+## .NET ##
+*.exe
+*.dll
+*.pdb
+*.config
+*.cache
+*.manifest
+*.application
+
+# Directories
+bin/
+obj/
+TestResults/
+[Bb]uild/
+[Pp]ublish/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userprefs
+*.nupkg
+*.swp
+*.sln.cache
+
+# Rider/Resharper
+.idea/
+*.sln.iml
+*.DotSettings
+
+# NuGet
+packages/
+[Nn]u[Gg]et/
+*.nupkg

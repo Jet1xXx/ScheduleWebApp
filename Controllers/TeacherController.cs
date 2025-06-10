@@ -176,6 +176,7 @@ namespace ScheduleWebApp.Controllers
                     return View(dto);
                 }
 
+
                 _teacherService.UpdateTeacher(dto);
 
                 _logger.LogInformation("Обновлён преподаватель: {FullName} (ID: {Id})",
